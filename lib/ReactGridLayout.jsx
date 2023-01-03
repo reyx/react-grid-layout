@@ -658,7 +658,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     const { layout } = this.state;
     // This is relative to the DOM element that this event fired for.
-    const { layerX, layerY } = e.nativeEvent;
+    const { layerX, layerY } = e.nativeEvent;    
+    console.log(layerX, layerY, e.nativeEvent)
     const droppingPosition = {
       left: layerX / transformScale,
       top: layerY / transformScale,
