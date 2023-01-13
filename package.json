@@ -1,6 +1,6 @@
 {
   "name": "react-grid-layout",
-  "version": "292424NEXT_VERSION",
+  "version": "292681NEXT_VERSION",
   "description": "A draggable and resizable grid layout with responsive breakpoints, for React.",
   "main": "index.js",
   "scripts": {
