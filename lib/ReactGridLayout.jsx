@@ -1,8 +1,8 @@
 // @flow
 import * as React from "react";
 
-import isEqual from "lodash.isequal";
 import clsx from "clsx";
+import isEqual from "lodash.isequal";
 import {
   bottom,
   childrenEqual,
@@ -20,21 +20,21 @@ import {
 
 import { calcXY } from "./calculateUtils";
 
-import GridItem from "./GridItem";
-import ReactGridLayoutPropTypes from "./ReactGridLayoutPropTypes";
 import type {
   ChildrenArray as ReactChildrenArray,
   Element as ReactElement
 } from "react";
+import GridItem from "./GridItem";
+import ReactGridLayoutPropTypes from "./ReactGridLayoutPropTypes";
 
 // Types
 import type {
   CompactType,
-  GridResizeEvent,
-  GridDragEvent,
   DragOverEvent,
-  Layout,
   DroppingPosition,
+  GridDragEvent,
+  GridResizeEvent,
+  Layout,
   LayoutItem
 } from "./utils";
 
@@ -55,7 +55,7 @@ type State = {
   propsLayout?: Layout
 };
 
-import type { Props, DefaultProps } from "./ReactGridLayoutPropTypes";
+import type { DefaultProps, Props } from "./ReactGridLayoutPropTypes";
 
 // End Types
 
@@ -619,7 +619,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
   // Called while dragging an element. Part of browser native drag/drop API.
   // Native event target might be the layout itself, or an element within the layout.
-  onDragOver: DragOverEvent => void | false = e => {
+  onDragOver: DragOverEvent => void | false = (e: DragOverEvent) => {
     e.preventDefault(); // Prevent any browser native action
     e.stopPropagation();
 
@@ -658,11 +658,19 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     const { layout } = this.state;
     // This is relative to the DOM element that this event fired for.
-    const { layerX, layerY } = e.nativeEvent;    
-    console.log(layerX, layerY, e.nativeEvent)
+    const { clientX, clientY } = e.nativeEvent;
+    const element =
+      e.nativeEvent.path?.find(({ classList }) =>
+        classList.contains("react-grid-layout")
+      ) || e.nativeEvent.target;
+    const rect = element.getBoundingClientRect();
+    const [marginX, marginY] = containerPadding || margin || [0, 0];
+    const lx = Math.round(clientX - rect.left) + marginX;
+    const ly = Math.round(clientY - rect.top) + marginY;
+
     const droppingPosition = {
-      left: layerX / transformScale,
-      top: layerY / transformScale,
+      left: lx / transformScale,
+      top: ly / transformScale,
       e
     };
 
@@ -678,8 +686,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
       const calculatedPosition = calcXY(
         positionParams,
-        layerY,
-        layerX,
+        ly,
+        lx,
         finalDroppingItem.w,
         finalDroppingItem.h
       );
@@ -700,7 +708,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       });
     } else if (this.state.droppingPosition) {
       const { left, top } = this.state.droppingPosition;
-      const shouldUpdatePosition = left != layerX || top != layerY;
+      console.log(left, lx);
+      const shouldUpdatePosition = left != lx || top != ly;
       if (shouldUpdatePosition) {
         this.setState({ droppingPosition });
       }

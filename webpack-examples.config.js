@@ -44,7 +44,7 @@ module.exports = {
   devServer: {
     compress: true,
     port: 4002,
-    open: "/react-grid-layout/examples/0-showcase.html",
+    open: "/react-grid-layout/examples/20-nested.html",
     client: {
       overlay: true
     },

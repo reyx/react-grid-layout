@@ -17,7 +17,8 @@ type State = {|
   currentBreakpoint: string,
   compactType: CompactType,
   mounted: boolean,
-  layouts: {[string]: Layout}
+  layouts: {[string]: Layout},
+  mainLayouts: {[string]: Layout}
 |};
 
 export default class ShowcaseLayout extends React.Component<Props, State> {
@@ -25,14 +26,15 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
     className: "layout",
     rowHeight: 30,
     onLayoutChange: function() {},
-    cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
+    cols: { lg: 12, md: 12, sm: 12, xs: 12, xxs: 12 }
   };
 
   state: State = {
     currentBreakpoint: "lg",
     compactType: "vertical",
     mounted: false,
-    layouts: { lg: generateLayout() }
+    layouts: { lg: generateLayout() },
+    mainLayouts: { lg: generateMainLayout() }
   };
 
   componentDidMount() {
@@ -42,17 +44,8 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
   generateDOM(): ReactChildren {
     return _.map(this.state.layouts.lg, function(l, i) {
       return (
-        <div key={i} className={l.static ? "static" : ""}>
-          {l.static ? (
-            <span
-              className="text"
-              title="This item is static and cannot be removed or resized."
-            >
-              Static - {i}
-            </span>
-          ) : (
-            <span className="text">{i}</span>
-          )}
+        <div key={i}>
+          <span className="text">{i}</span>
         </div>
       );
     });
@@ -83,7 +76,7 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
     this.setState({
       layouts: { lg: generateLayout() }
     });
-  };
+  };  
 
   onDrop: (layout: Layout, item: ?LayoutItem, e: Event) => void = (elemParams) => {
     alert(`Element parameters: ${JSON.stringify(elemParams)}`);
@@ -105,11 +98,29 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
         <button onClick={this.onCompactTypeChange}>
           Change Compaction Type
         </button>
+        <div
+          className="droppable-element"
+          draggable={true}
+          unselectable="on"
+          // this is a hack for firefox
+          // Firefox requires some kind of initialization
+          // which we can do by adding this attribute
+          // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
+          onDragStart={e => e.dataTransfer.setData("text/plain", "")}
+        >
+          Droppable Element (Drag me!)
+        </div>
         <ResponsiveReactGridLayout
-          {...this.props}
-          layouts={this.state.layouts}
+          currentBreakpoint="lg"
+          className="layout"          
+          onLayoutChange={() => {}}
+          cols={{ lg: 2, md: 2, sm: 2, xs: 2, xxs: 2 }}
+          rowHeight={240}
+          isDroppable={false}
+          isBounded={true}
+          draggableHandle=".container-draggable-handle"
+          layouts={this.state.mainLayouts}
           onBreakpointChange={this.onBreakpointChange}
-          onLayoutChange={this.onLayoutChange}
           onDrop={this.onDrop}
           // WidthProvider option
           measureBeforeMount={false}
@@ -119,23 +130,56 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
           compactType={this.state.compactType}
           preventCollision={!this.state.compactType}
         >
-          {this.generateDOM()}
+            {[1,2,3,4].map(id => (
+              <div key={id}>
+                <span className="container-draggable-handle">drag</span>
+                <ResponsiveReactGridLayout
+                  {...this.props}                  
+                  layouts={this.state.layouts}
+                  onBreakpointChange={this.onBreakpointChange}
+                  onLayoutChange={this.onLayoutChange}
+                  onDrop={this.onDrop}
+                  isBounded={true}
+                  isDroppable={true}
+                  droppingItem={{ i: "drop", w: 6, h: 2 }}
+                  // WidthProvider option
+                  measureBeforeMount={false}
+                  // I like to have it animate on mount. If you don't, delete `useCSSTransforms` (it's default `true`)
+                  // and set `measureBeforeMount={true}`.
+                  useCSSTransforms={this.state.mounted}
+                  compactType={this.state.compactType}
+                  preventCollision={!this.state.compactType}
+                >
+                  {this.generateDOM()}
+                </ResponsiveReactGridLayout>
+              </div>
+            ))}
         </ResponsiveReactGridLayout>
       </div>
     );
   }
 }
 
-function generateLayout() {
-  return _.map(_.range(0, 25), function(item, i) {
-    var y = Math.ceil(Math.random() * 4) + 1;
+function generateMainLayout() {
+  return _.map(_.range(0, 4), function(item, i) {    
     return {
-      x: Math.round(Math.random() * 5) * 2,
-      y: Math.floor(i / 6) * y,
-      w: 2,
-      h: y,
+      x: i % 2 ? 1 : 0,
+      y: i % 2 ? 1 : 0,
+      w: 1,
+      h: 1,
       i: i.toString(),
-      static: Math.random() < 0.05
+    };
+  });
+}
+
+function generateLayout() {
+  return _.map(_.range(0, 4), function(item, i) {    
+    return {
+      x: i % 2 ? 6 : 0,
+      y: i % 2 ? 1 : 0,
+      w: 6,
+      h: 2,
+      i: i.toString(),
     };
   });
 }
@@ -143,3 +187,5 @@ function generateLayout() {
 if (process.env.STATIC_EXAMPLES === true) {
   import("../test-hook.jsx").then(fn => fn.default(ShowcaseLayout));
 }
+
+console.log('main', generateMainLayout());
